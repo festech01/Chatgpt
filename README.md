@@ -1,26 +1,32 @@
-# SkillScope 2.0 — Learn something good today
+# SkillScope 3.0 — Learning should feel easy
 
-A friendly learning app for phones. Type a skill, see a three-step learning path, and find YouTube videos or websites that match each step.
+A mobile-friendly learning guide with saved plans, bookmarks, progress, detailed lesson steps, a personal goal field, an AI study buddy and search for YouTube lessons or educational websites.
 
-## What you can do
-- Search for any skill, such as Canva, Excel, Python or digital marketing.
-- Get a simple guide: basics, practice, then a small project.
-- Watch real YouTube lessons (when API access is set up).
-- Save lessons and tick off learning steps. Progress stays on this browser.
-- Open on Android, and use **Add to Home screen**.
+## Start
+Deploy this GitHub repo on Vercel (https://vercel.com/new). Choose the repository, select **Other** framework, output directory **public**, then Deploy. Vercel will publish new changes pushed to the main branch. On Android Chrome, use **Install app** or **Add to Home screen**.
 
-This version uses topic-based learning suggestions, **not an AI that reviews every video**. Links shown inside the app come from YouTube or Brave search when keys are added.
+## Add live features
+In Vercel project Settings → Environment Variables, set:
+- `YOUTUBE_API_KEY`: Google Cloud key with YouTube Data API v3 enabled. Shows YouTube search results.
+- `BRAVE_SEARCH_API_KEY`: optional Brave Search API key. Shows websites.
+- `OPENAI_API_KEY`: OpenAI API key. Enables AI chat and the **Make my plan smarter** button.
+- `OPENAI_MODEL`: optional model name; default is `gpt-4.1-mini`.
 
-## Put your app online
-1. Open https://vercel.com/new and import GitHub repo **festech01/Chatgpt**.
-2. Set Framework to **Other**, Output directory to **public**, no build command. Click Deploy.
-3. Get a key from Google Cloud after enabling **YouTube Data API v3**.
-4. In Vercel: **Project > Settings > Environment Variables**, create **YOUTUBE_API_KEY**, paste your key and redeploy.
-5. Optional web search: Add **BRAVE_SEARCH_API_KEY** from Brave Search API and redeploy.
-6. Open your Vercel website link in Android Chrome, tap **⋮**, choose **Install app** or **Add to Home screen**.
+Keep keys in Vercel, **never** in browser code, commits, or README. Redeploy after adding environment variables. External API use may incur charges.
 
-GitHub holds the source code; Vercel serves the site and API. **Never put your real API keys into GitHub code.**
+## Saved progress
+Tap **Save this learning plan** to put the current plan into **Saved**. Save individual video or website links from the results. Progress, plans, and chat messages are saved locally on that particular browser using localStorage. **It is not cloud memory or cross-device sync.** Export your backup file from the Saved tab to keep your work and restore it on another browser. Don't rely on a browser storage backup as the only copy.
 
-If the keys are not connected yet, the app still creates learning paths and offers YouTube or Google search links.
+## About the AI
+The starter learning paths work without an AI key. Detailed explanations come from the lesson guide; AI chat and smarter plans require a connected paid API. AI plans and answers can make mistakes, and **no video is guaranteed reviewed or verified**. Search results may come from outside websites.
 
-Costs can apply for public hosting or API usage, depending on your plan and usage. Add rate limits, caching, and privacy information before a large public launch.
+## Ads and monetization
+A clearly marked advertisement placeholder is included. **No actual ads are active and no income is being generated**. Apply to an ad network such as Google AdSense, meet its publisher requirements, receive approval, then configure live ad units. AdSense publishers must be adults (under-18 creators need a parent/guardian to own the publisher account). Add suitable cookie/consent notices and final contact details to the privacy page. Never make ads look like lessons. Do not click your own ads or ask others to click.
+
+## Before a larger public launch
+- Add account-based login and server-backed data if you need synced memory.
+- Add server-side per-user rate limiting, spending caps, and abuse monitoring to protect AI and search APIs.
+- Review provider terms and consent/cookie obligations in the countries you serve.
+- Test the app on your phone and monitor Vercel deployment and function logs.
+
+This is an early app, not a full production learning management system.
