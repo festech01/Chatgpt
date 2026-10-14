@@ -1,5 +1,6 @@
 const json=(value,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const trim=(value,max=1000)=>String(value||'').trim().slice(0,max);
+export async function GET(){return json({status:process.env.OPENAI_API_KEY?'configured':'missing',hint:process.env.OPENAI_API_KEY?'AI key is set; send a test question to confirm it works.':'Add OPENAI_API_KEY in Vercel, then redeploy.'})}
 export async function POST(request){
   const origin=request.headers.get('origin');
   if(origin&&new URL(origin).host!==new URL(request.url).host)return json({error:'Request not allowed.'},403);
@@ -10,7 +11,7 @@ export async function POST(request){
   const mode=data.mode==='plan'?'plan':'chat';
   if(!topic)return json({error:'Choose a topic first.'},400);
   const key=process.env.OPENAI_API_KEY;
-  if(!key)return json({error:'AI is not connected yet. The site owner needs to add OPENAI_API_KEY in Vercel settings.'},503);
+  if(!key)return json({error:'AI is not connected yet. Ask the site owner to add OPENAI_API_KEY in Vercel and redeploy.',code:'missing_key'},503);
   const history=Array.isArray(data.history)?data.history.slice(-12).filter(m=>m&&['user','assistant'].includes(m.role)&&typeof m.content==='string').map(m=>({role:m.role,content:trim(m.content,1000)})):[];
   if(mode==='chat'&&!history.some(m=>m.role==='user'))return json({error:'Ask a question first.'},400);
   const instructions=mode==='plan'
@@ -20,7 +21,18 @@ export async function POST(request){
   const input=mode==='plan'?[{role:'user',content:learner}]:[{role:'developer',content:learner},...history];
   try{
     const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-4.1-mini',instructions,input,max_output_tokens:mode==='plan'?1250:550,store:false}),signal:AbortSignal.timeout(25000)});
-    if(!response.ok){return json({error:response.status===429?'The tutor is busy. Try again shortly.':'The AI service is unavailable right now.'},502)}
+    if(!response.ok){
+      let details={};try{details=await response.json()}catch{}
+      const errCode=String(details?.error?.code||'');
+      let message='The AI service is unavailable right now.';
+      if(response.status===401)message='The AI key is invalid or expired. The site owner needs to check it in Vercel.';
+      else if(response.status===403)message='This AI key is not allowed to use the service. The site owner should check its permissions.';
+      else if(response.status===404)message='The chosen AI model is not available to this project. Check OPENAI_MODEL.';
+      else if(response.status===429)message=/credit|quota|limit|billing|spend/i.test(errCode)?'The AI account has reached its credits or spending limit. The site owner needs to review billing.':'The tutor is getting too many questions. Please try again shortly.';
+      else if(response.status===400)message='The AI request could not be processed. Please check the server setup.';
+      console.error('SkillScope tutor API failure',{status:response.status,code:errCode});
+      return json({error:message,code:response.status===429?'quota_or_limit':'provider_error'},502)
+    }
     const raw=await response.json();
     const answer=(raw.output||[]).flatMap(x=>x.content||[]).filter(x=>x.type==='output_text').map(x=>x.text).join('\n').trim();
     if(!answer)return json({error:'The tutor had trouble answering. Please try again.'},502);
