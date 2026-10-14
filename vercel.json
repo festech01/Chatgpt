@@ -1,1 +1,6 @@
-{"framework":null,"outputDirectory":"public","buildCommand":"","cleanUrls":true}
+{
+  "framework": null,
+  "outputDirectory": "public",
+  "buildCommand": "node scripts/build.mjs",
+  "cleanUrls": true
+}
