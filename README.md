@@ -30,3 +30,13 @@ A clearly marked advertisement placeholder is included. **No actual ads are acti
 - Test the app on your phone and monitor Vercel deployment and function logs.
 
 This is an early app, not a full production learning management system.
+
+## If the AI chat does not answer
+1. Open the live website, create/open a learning path, then tap **Check AI connection** in the chat box.
+2. If it says "AI is not connected", open **Vercel → Project → Settings → Environment Variables**.
+3. Add an environment variable named exactly `OPENAI_API_KEY` and enter your API key from the OpenAI API platform (not a ChatGPT login or subscription). Select **Production** and save.
+4. Redeploy the Vercel project from the **Deployments** tab. Environment variable changes do not affect older deployments.
+5. Open the updated app, press **Check AI connection**, then send a test question.
+6. If it says configured but the chat still fails, check **Vercel → Logs** for the tutor function. Bad keys, missing permissions, and API credit or usage limits can prevent replies.
+
+The website cannot make real AI responses without a working provider key and any required API billing. Never place the key in GitHub or the browser code; keep it in Vercel Environment Variables.
