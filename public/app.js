@@ -52,13 +52,47 @@ function writeChat(h){localStorage.setItem(chatKey(),JSON.stringify(h.slice(-24)
 $('clear-chat').onclick=()=>{localStorage.removeItem(chatKey());drawChat();$('chat-status').textContent='Chat cleared from this browser.'};
 for(const b of document.querySelectorAll('[data-question]'))b.onclick=()=>{$('chat-input').value=b.dataset.question;$('chat-input').focus()};
 let chatting=false;
-$('chat-form').onsubmit=async e=>{e.preventDefault();if(chatting||!state.plan)return;const msg=$('chat-input').value.trim();if(!msg)return;let history=chatHistory();history.push({role:'user',content:msg.slice(0,1000)});writeChat(history);drawChat();$('chat-input').value='';$('chat-status').textContent='Thinking…';chatting=true;$('chat-send').disabled=true;try{const r=await fetch('/api/tutor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:state.plan.topic,goal:getGoal(),level:state.plan.level,step:state.plan.steps[state.step]?.title,history:history.slice(-12)})});const data=await r.json().catch(()=>{throw Error('The AI server did not return a valid reply. Check that the Vercel function is deployed.')});if(!r.ok)throw Error(data.error||'The tutor is unavailable');history.push({role:'assistant',content:String(data.answer||'Could you try asking that in another way?').slice(0,3500)});writeChat(history);drawChat();$('chat-status').textContent='AI is working. Ask me another question.';$('chat-status').classList.remove('error')}catch(err){const message=String(err.message||'Could not connect to the AI.');$('chat-status').textContent=message+' Your question is saved.';$('chat-status').classList.add('error');drawChat();const warning=item('div','⚠️ '+message+'\\n\\nWhile AI is unavailable, try this study tip (not an AI answer): '+(state.plan.steps[state.step]?.task||'Take one small step, practise, and write down what you learned.'),'chat-msg chat-error');$('chat-log').append(warning);const retry=item('button','Retry my last question','outline small');retry.type='button';retry.onclick=()=>{$('chat-input').value=msg;$('chat-input').focus()};$('chat-log').append(retry);$('chat-log').scrollTop=$('chat-log').scrollHeight}finally{chatting=false;$('chat-send').disabled=false}};
-$('ai-plan').onclick=async()=>{if(!state.plan)return;const b=$('ai-plan');b.disabled=true;b.textContent='✦ Building your plan…';try{const r=await fetch('/api/tutor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'plan',topic:state.plan.topic,goal:getGoal(),level:state.plan.level,minutes:state.plan.minutes||30})});const d=await r.json();if(!r.ok)throw Error(d.error||'Plan could not be created');if(!Array.isArray(d.steps)||d.steps.length<3||d.steps.length>8)throw Error('Try again');state.plan.steps=d.steps.map(s=>({title:String(s.title||'Learn').slice(0,90),query:String(s.query||state.plan.topic+' tutorial').slice(0,150),why:String(s.why||'').slice(0,300),task:String(s.task||'').slice(0,300),win:String(s.win||'').slice(0,300)}));state.step=0;renderPlan();search();if(planSaved()){const ix=library.findIndex(x=>x.id===state.plan.id);library[ix]={...state.plan};saveLibrary()}b.textContent='✓ Better plan ready'}catch(err){b.textContent='✦ Make my plan smarter';alert(err.message+' You can still use the starter plan.')}finally{b.disabled=false;setTimeout(()=>{b.textContent='✦ Make my plan smarter'},2500)}};
+$('chat-form').onsubmit=async e=>{e.preventDefault();if(chatting||!state.plan)return;const msg=$('chat-input').value.trim();if(!msg)return;let history=chatHistory();history.push({role:'user',content:msg.slice(0,1000)});writeChat(history);drawChat();$('chat-input').value='';$('chat-status').textContent='Thinking…';chatting=true;$('chat-send').disabled=true;try{const r=await fetch('/api/tutor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:state.plan.topic,goal:getGoal(),level:state.plan.level,step:state.plan.steps[state.step]?.title,history:history.slice(-12)})});const data=await r.json().catch(()=>{throw Error('The AI server did not return a valid reply. Check that the Vercel function is deployed.')});updateQuotaDisplay(data);if(!r.ok)throw Error(data.error||'The tutor is unavailable');history.push({role:'assistant',content:String(data.answer||'Could you try asking that in another way?').slice(0,3500)});writeChat(history);drawChat();$('chat-status').textContent='AI is working. Ask me another question.';$('chat-status').classList.remove('error')}catch(err){const message=String(err.message||'Could not connect to the AI.');$('chat-status').textContent=message+' Your question is saved.';$('chat-status').classList.add('error');drawChat();const warning=item('div','⚠️ '+message+'\\n\\nWhile AI is unavailable, try this study tip (not an AI answer): '+(state.plan.steps[state.step]?.task||'Take one small step, practise, and write down what you learned.'),'chat-msg chat-error');$('chat-log').append(warning);const retry=item('button','Retry my last question','outline small');retry.type='button';retry.onclick=()=>{$('chat-input').value=msg;$('chat-input').focus()};$('chat-log').append(retry);$('chat-log').scrollTop=$('chat-log').scrollHeight}finally{chatting=false;$('chat-send').disabled=dailyAiRemaining===0}};
+$('ai-plan').onclick=async()=>{if(!state.plan)return;const b=$('ai-plan');b.disabled=true;b.textContent='✦ Building your plan…';try{const r=await fetch('/api/tutor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'plan',topic:state.plan.topic,goal:getGoal(),level:state.plan.level,minutes:state.plan.minutes||30})});const d=await r.json();updateQuotaDisplay(d);if(!r.ok)throw Error(d.error||'Plan could not be created');if(!Array.isArray(d.steps)||d.steps.length<3||d.steps.length>8)throw Error('Try again');state.plan.steps=d.steps.map(s=>({title:String(s.title||'Learn').slice(0,90),query:String(s.query||state.plan.topic+' tutorial').slice(0,150),why:String(s.why||'').slice(0,300),task:String(s.task||'').slice(0,300),win:String(s.win||'').slice(0,300)}));state.step=0;renderPlan();search();if(planSaved()){const ix=library.findIndex(x=>x.id===state.plan.id);library[ix]={...state.plan};saveLibrary()}b.textContent='✓ Better plan ready'}catch(err){b.textContent='✦ Make my plan smarter';alert(err.message+' You can still use the starter plan.')}finally{b.disabled=dailyAiRemaining===0;setTimeout(()=>{b.textContent='✦ Make my plan smarter'},2500)}};
 const originalSearch=search;
 search=async function(){if(!state.plan)return;const current=state.plan.steps[state.step];const originalQuery=current.query;current.query=[originalQuery,state.plan.goal||''].join(' ').trim().slice(0,120);try{await originalSearch()}finally{current.query=originalQuery}};
 renderLibrary();if(state.plan){renderPlan();drawChat()}
 
 /* Check whether the AI server is connected; no secret keys go to the browser. */
-async function checkTutorConnection(){const el=$('chat-status');if(!el)return;el.textContent='Checking the AI connection…';try{const response=await fetch('/api/tutor',{method:'GET',cache:'no-store'});const data=await response.json();if(!response.ok)throw Error('The AI server is unavailable on this deployment.');if(data.status==='configured'){el.textContent='AI key is set. Send a question to test the connection.';el.classList.remove('error')}else{el.textContent='AI is not connected yet. The site owner must add OPENAI_API_KEY in Vercel and redeploy.';el.classList.add('error')}}catch{el.textContent='AI server could not be reached. Check the latest Vercel deployment and function logs.';el.classList.add('error')}}
+let dailyAiRemaining=null;
+function updateQuotaDisplay(data){
+  const badge=$('ai-allowance');
+  if(!badge)return;
+  if(Number.isInteger(data?.remaining) && data?.status!=='limits_missing' && data?.status!=='limits_unavailable'){
+    dailyAiRemaining=data.remaining;
+    badge.textContent='🎁 '+data.remaining+' of 5 free AI uses left today · resets at midnight UTC · Smarter plans use 1 too.';
+    badge.classList.toggle('empty',data.remaining===0);
+  }else if(data?.status==='limits_missing'||data?.status==='limits_unavailable'||data?.status==='missing'){
+    dailyAiRemaining=null;
+    badge.textContent='AI is not ready yet. The owner needs to connect the AI key and daily limit storage.';
+    badge.classList.add('empty');
+  }
+  $('chat-send').disabled=dailyAiRemaining===0;
+  $('ai-plan').disabled=dailyAiRemaining===0;
+}
+async function checkTutorConnection(){
+  const el=$('chat-status');if(!el)return;
+  el.textContent='Checking the AI connection…';
+  try{
+    const response=await fetch('/api/tutor',{method:'GET',cache:'no-store'});
+    const data=await response.json();
+    updateQuotaDisplay(data);
+    if(data.status==='configured'){
+      el.textContent=data.remaining===0?'Daily AI allowance reached. Come back tomorrow.':'AI is ready. Send a question to test the connection.';
+      el.classList.toggle('error',data.remaining===0);
+    }else{
+      el.textContent=data.hint||'AI is not connected yet. Please check Vercel settings.';
+      el.classList.add('error');
+    }
+  }catch{
+    el.textContent='AI server could not be reached. Check Vercel deployments and function logs.';
+    el.classList.add('error');
+  }
+}
 $('check-ai').onclick=checkTutorConnection;
 if(state.plan)checkTutorConnection();
