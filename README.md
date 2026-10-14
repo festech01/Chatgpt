@@ -1,42 +1,62 @@
-# SkillScope 3.0 — Learning should feel easy
+# SkillScope 4.0 — Find what to learn, one step at a time
 
-A mobile-friendly learning guide with saved plans, bookmarks, progress, detailed lesson steps, a personal goal field, an AI study buddy and search for YouTube lessons or educational websites.
+SkillScope is a mobile-friendly learning guide with real YouTube/web searching (once API keys are added), saved learning plans, a study-buddy chat, original learning guides and an ad-ready website.
 
-## Start
-Deploy this GitHub repo on Vercel (https://vercel.com/new). Choose the repository, select **Other** framework, output directory **public**, then Deploy. Vercel will publish new changes pushed to the main branch. On Android Chrome, use **Install app** or **Add to Home screen**.
+## Deploy on Vercel
+1. Connect https://github.com/festech01/Chatgpt to https://vercel.com/new.
+2. Select Framework **Other** and output directory **public**. The repo's build command runs automatically (`node scripts/build.mjs`).
+3. Deploy and open the Vercel URL. If the build fails, read the Vercel build log. Open on Android Chrome and choose **Install app** or **Add to Home screen**.
 
-## Add live features
-In Vercel project Settings → Environment Variables, set:
-- `YOUTUBE_API_KEY`: Google Cloud key with YouTube Data API v3 enabled. Shows YouTube search results.
-- `BRAVE_SEARCH_API_KEY`: optional Brave Search API key. Shows websites.
-- `OPENAI_API_KEY`: OpenAI API key. Enables AI chat and the **Make my plan smarter** button.
-- `OPENAI_MODEL`: optional model name; default is `gpt-4.1-mini`.
+## Set up live video search
+In Vercel → project **Settings → Environment Variables**, set:
+- `YOUTUBE_API_KEY` — Google Cloud YouTube Data API v3 key for live video results.
+- `BRAVE_SEARCH_API_KEY` — optional Brave Search API key for websites.
 
-Keep keys in Vercel, **never** in browser code, commits, or README. Redeploy after adding environment variables. External API use may incur charges.
+Keep all private keys on the server, never in GitHub. Redeploy after setting variables.
 
-## Saved progress
-Tap **Save this learning plan** to put the current plan into **Saved**. Save individual video or website links from the results. Progress, plans, and chat messages are saved locally on that particular browser using localStorage. **It is not cloud memory or cross-device sync.** Export your backup file from the Saved tab to keep your work and restore it on another browser. Don't rely on a browser storage backup as the only copy.
+## Connect the AI study buddy
+- `OPENAI_API_KEY` — OpenAI API platform secret key; API use is billed separately from a ChatGPT subscription.
+- `OPENAI_MODEL` — optional model choice, default `gpt-4.1-mini`.
 
-## About the AI
-The starter learning paths work without an AI key. Detailed explanations come from the lesson guide; AI chat and smarter plans require a connected paid API. AI plans and answers can make mistakes, and **no video is guaranteed reviewed or verified**. Search results may come from outside websites.
+**AI isn't turned on just by having a chat box.** The server must also have the daily limit storage below connected. Tap **Check AI connection** in the app to see the status.
 
-## Ads and monetization
-A clearly marked advertisement placeholder is included. **No actual ads are active and no income is being generated**. Apply to an ad network such as Google AdSense, meet its publisher requirements, receive approval, then configure live ad units. AdSense publishers must be adults (under-18 creators need a parent/guardian to own the publisher account). Add suitable cookie/consent notices and final contact details to the privacy page. Never make ads look like lessons. Do not click your own ads or ask others to click.
+## Make five free AI uses per day work (REQUIRED)
+To avoid an unprotected API bill, AI replies are *paused* until server-side limits are configured.
 
-## Before a larger public launch
-- Add account-based login and server-backed data if you need synced memory.
-- Add server-side per-user rate limiting, spending caps, and abuse monitoring to protect AI and search APIs.
-- Review provider terms and consent/cookie obligations in the countries you serve.
-- Test the app on your phone and monitor Vercel deployment and function logs.
+1. Create an Upstash Redis database at https://console.upstash.com/.
+2. In the database connection panel copy its REST URL and REST token.
+3. In Vercel's **Environment Variables**, set:
+   - `UPSTASH_REDIS_REST_URL` — database REST endpoint.
+   - `UPSTASH_REDIS_REST_TOKEN` — private REST token.
+   - `LIMIT_COOKIE_SECRET` — a random secret of **at least 32 characters**. Keep this secret private and stable across deployments.
+   - `MAX_DAILY_AI_CALLS` — optional site-wide total AI call cap. Default **200** per UTC day to help protect your spending.
+4. Redeploy and open **Check AI connection** again.
 
-This is an early app, not a full production learning management system.
+The app gives **5 successful AI chat replies or smarter-plan generations per browser per UTC day**. Both the chat and Make my plan smarter button use one allowance. A secure signed cookie identifies a browser, and Upstash stores counters. Failed AI calls are refunded where possible. The counter resets at **00:00 UTC** (01:00 in Nigeria).
 
-## If the AI chat does not answer
-1. Open the live website, create/open a learning path, then tap **Check AI connection** in the chat box.
-2. If it says "AI is not connected", open **Vercel → Project → Settings → Environment Variables**.
-3. Add an environment variable named exactly `OPENAI_API_KEY` and enter your API key from the OpenAI API platform (not a ChatGPT login or subscription). Select **Production** and save.
-4. Redeploy the Vercel project from the **Deployments** tab. Environment variable changes do not affect older deployments.
-5. Open the updated app, press **Check AI connection**, then send a test question.
-6. If it says configured but the chat still fails, check **Vercel → Logs** for the tutor function. Bad keys, missing permissions, and API credit or usage limits can prevent replies.
+**Important:** No login means this is a *browser/device* limit, not a true per-person limit. Someone can clear cookies or use another browser to start a new allowance. The site-wide cap adds cost protection, but **this is not a hard payment cap**. Add user login, stronger anti-abuse checks, and spending controls before advertising widely. The API key, Redis token and cookie secret must never be shared publicly.
 
-The website cannot make real AI responses without a working provider key and any required API billing. Never place the key in GitHub or the browser code; keep it in Vercel Environment Variables.
+## How to connect AdSense (AD CODE PREPARED, ADS NOT LIVE)
+No publisher ID is included in this public repo. No ads are live until Google accepts the publisher and site.
+
+1. Make sure your site works and contains original useful material. The **Learning guides** page has original content to help readers, but approval is not guaranteed.
+2. The AdSense account owner must be **18+**. For a creator under 18, a parent or guardian may apply using their own account and receive payments.
+3. The adult publisher applies at https://adsense.google.com/start/ and adds the exact SkillScope website URL.
+4. Copy the AdSense publisher ID. It looks like `ca-pub-1234567890123456` (that is an **example only**, not a real account).
+5. In Vercel Environment Variables set `ADSENSE_CLIENT_ID` to your real publisher ID and set `ADSENSE_ENABLED` to `true` for **Production**. Redeploy. The build adds Google's script to the website and writes a matching `/ads.txt` file.
+6. In AdSense, complete site ownership verification and request a review. Once the site is **Ready**, configure Auto ads on the AdSense dashboard. Google controls whether and when ads display.
+7. **Before turning ads on**, complete your privacy policy, add operator contact details, and configure appropriate consent tools (including a Google-approved CMP when required in regions like the EEA/UK). Review the site on phones so advertisements never look like lesson buttons.
+
+To turn the ad snippet off: change `ADSENSE_ENABLED` to `false` and redeploy. The build won't include AdSense code on an ad-free deployment.
+
+**Never click your own ads or ask people to click them.** Ads are not guaranteed income. Earnings depend on real traffic, location, and ad demand.
+
+## Saved lessons and privacy
+- Plans, saved video links, chat history and step progress stay in *that browser's local storage* (not cloud syncing).
+- Export a backup in **Saved** to keep a copy; clearing browser data can remove your learning history.
+- The secure cookie stores a random browser identifier for usage limits, not your name.
+- The AI receives your topic, goal and question through the server. Never submit passwords or highly sensitive personal information.
+- The site has a privacy page that must be adapted to actual operations before full public launch.
+
+## Before you scale
+Add verified login, server-backed sync, user-facing support details, stronger abuse controls, a review of external provider terms, and a way to audit running costs. Monitor OpenAI dashboard usage and Vercel/Upstash logs. This remains an early app rather than a complete production learning platform.
