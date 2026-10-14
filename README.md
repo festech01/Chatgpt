@@ -41,7 +41,7 @@ No publisher ID is included in this public repo. No ads are live until Google ac
 
 1. Make sure your site works and contains original useful material. The **Learning guides** page has original content to help readers, but approval is not guaranteed.
 2. The AdSense account owner must be **18+**. For a creator under 18, a parent or guardian may apply using their own account and receive payments.
-3. The adult publisher applies at https://adsense.google.com/start/ and adds the exact SkillScope website URL.
+3. The adult publisher applies at https://adsense.google.com/start/ and adds the SkillScope website. Google generally asks for a standard root domain, not a generic hosting subdomain; you may need to connect a custom domain to Vercel before applying. Check Google's domain rules first.
 4. Copy the AdSense publisher ID. It looks like `ca-pub-1234567890123456` (that is an **example only**, not a real account).
 5. In Vercel Environment Variables set `ADSENSE_CLIENT_ID` to your real publisher ID and set `ADSENSE_ENABLED` to `true` for **Production**. Redeploy. The build adds Google's script to the website and writes a matching `/ads.txt` file.
 6. In AdSense, complete site ownership verification and request a review. Once the site is **Ready**, configure Auto ads on the AdSense dashboard. Google controls whether and when ads display.
