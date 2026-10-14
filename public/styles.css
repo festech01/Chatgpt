@@ -11,3 +11,5 @@ textarea{font:inherit;resize:vertical;border:1px solid #dfe5da;border-radius:12p
 @media(max-width:750px){.question-grid,.saved-library{grid-template-columns:1fr}.plan-actions{order:2}.chat-compose{flex-direction:column}.chat-compose button{width:100%}.ai-head{flex-direction:column}.heading{gap:12px}}
 
 .ad-slot{background:#f5f4ef;border:1px dashed #d0d6c9;border-radius:14px;padding:14px;margin:28px 0;text-align:center}.ad-caption{font-size:9px;letter-spacing:2px;color:#888d84;font-weight:700}.ad-slot p{font-size:12px;margin:17px 0;color:#9a9f96}
+
+.chat-actions{display:flex;gap:8px;flex-wrap:wrap}.chat-error{align-self:stretch;background:#fff2e7;border:1px solid #efcbbb;color:#7d3828}.chat-log>.outline{align-self:flex-start}.chat-msg{overflow-wrap:anywhere}.status.error{color:#a3402e;font-weight:600}
